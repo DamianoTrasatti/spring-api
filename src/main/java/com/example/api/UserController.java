@@ -1,6 +1,9 @@
 package com.example.api;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -29,6 +32,7 @@ public class UserController {
                 u.setEmail(rs.getString("email"));
                 u.setPasswordHash(rs.getString("password_hash"));
                 u.setBio(rs.getString("bio"));
+
                 utenti.add(u);
             }
         } catch (SQLException e) {
@@ -48,6 +52,7 @@ public class UserController {
             ps.setString(4, nuovoUtente.getEmail());
             ps.setString(5, nuovoUtente.getPasswordHash());
             ps.setString(6, nuovoUtente.getBio());
+
             ps.executeUpdate();
             return "Utente creato con successo per " + nuovoUtente.getNome();
         } catch (SQLException e) {
@@ -100,4 +105,34 @@ public class UserController {
             return "Errore nell'eliminazione.";
         }
     }
+
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestBody LoginRequest request) {
+        String sql = "SELECT password_hash FROM users WHERE username = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, request.getUsername());
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                String storedHash = rs.getString("password_hash");
+
+                // Verifica la password inserita con quella salvata
+                // BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+                // if (encoder.matches(request.getPassword(), storedHash)) {
+                if (request.getPassword().equals(storedHash)) {
+                    return ResponseEntity.ok("Login avvenuto con successo");
+                } else {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Password errata");
+                }
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Utente non trovato");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Errore durante il login");
+        }
+    }
+
 }
