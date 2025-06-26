@@ -148,7 +148,7 @@ public class UserController {
                 // Verifica la password inserita con quella salvata
                 // BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
                 // if (encoder.matches(request.getPassword(), storedHash)) {
-                if (request.getPassword().equals(storedHash)) {
+                if (request.getPasswordHash().equals(storedHash)) {
                     return ResponseEntity.ok("Login avvenuto con successo");
                 } else {
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Password errata");
