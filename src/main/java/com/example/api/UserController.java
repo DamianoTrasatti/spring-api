@@ -42,24 +42,51 @@ public class UserController {
     }
 
     @PostMapping("/crea_utenti")
-    public String creaUtente(@RequestBody Utenti nuovoUtente) {
+    public ResponseEntity<String> creaUtente(@RequestBody Utenti nuovoUtente) {
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
-            String sql = "INSERT INTO users (nome, cognome, username, email, password_hash, bio) VALUES (?, ?, ?, ?, ?, ?)";
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, nuovoUtente.getNome());
-            ps.setString(2, nuovoUtente.getCognome());
-            ps.setString(3, nuovoUtente.getUsername());
-            ps.setString(4, nuovoUtente.getEmail());
-            ps.setString(5, nuovoUtente.getPasswordHash());
-            ps.setString(6, nuovoUtente.getBio());
 
-            ps.executeUpdate();
-            return "Utente creato con successo per " + nuovoUtente.getNome();
+            // Controlla se username esiste
+            String checkUsernameSql = "SELECT COUNT(*) FROM users WHERE username = ?";
+            try (PreparedStatement checkUsernameStmt = conn.prepareStatement(checkUsernameSql)) {
+                checkUsernameStmt.setString(1, nuovoUtente.getUsername());
+                ResultSet rs = checkUsernameStmt.executeQuery();
+                rs.next();
+                if (rs.getInt(1) > 0) {
+                    return ResponseEntity.status(HttpStatus.CONFLICT).body("Username già esistente.");
+                }
+            }
+
+            // Controlla se email esiste
+            String checkEmailSql = "SELECT COUNT(*) FROM users WHERE email = ?";
+            try (PreparedStatement checkEmailStmt = conn.prepareStatement(checkEmailSql)) {
+                checkEmailStmt.setString(1, nuovoUtente.getEmail());
+                ResultSet rs = checkEmailStmt.executeQuery();
+                rs.next();
+                if (rs.getInt(1) > 0) {
+                    return ResponseEntity.status(HttpStatus.CONFLICT).body("Email già esistente.");
+                }
+            }
+
+            // Inserisci nuovo utente
+            String insertSql = "INSERT INTO users (nome, cognome, username, email, password_hash, bio) VALUES (?, ?, ?, ?, ?, ?)";
+            try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
+                insertStmt.setString(1, nuovoUtente.getNome());
+                insertStmt.setString(2, nuovoUtente.getCognome());
+                insertStmt.setString(3, nuovoUtente.getUsername());
+                insertStmt.setString(4, nuovoUtente.getEmail());
+                insertStmt.setString(5, nuovoUtente.getPasswordHash());
+                insertStmt.setString(6, nuovoUtente.getBio());
+
+                insertStmt.executeUpdate();
+                return ResponseEntity.ok("Utente creato con successo per " + nuovoUtente.getNome());
+            }
+
         } catch (SQLException e) {
             e.printStackTrace();
-            return "Errore nella creazione utente.";
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Errore nella creazione utente.");
         }
     }
+
 
     @PutMapping("/modifica_utenti")
     public String modificaNomeUtente(@RequestBody ModificaNomeRequest richiesta) {
