@@ -2,7 +2,7 @@ package com.example.api;
 
 public class LoginRequest {
     private String username;
-    private String password;
+    private String passwordHash;
 
     // Getter e setter
     public String getUsername() {
@@ -13,11 +13,11 @@ public class LoginRequest {
         this.username = username;
     }
 
-    public String getPassword() {
-        return password;
+    public String getPasswordHash() {
+        return passwordHash;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 }
