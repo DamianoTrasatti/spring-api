@@ -3,7 +3,7 @@ package com.example.api;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+// import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -12,9 +12,11 @@ import java.util.List;
 @RestController
 public class UserController {
 
+
     private static final String DB_URL = "jdbc:postgresql://dpg-d17uh7h5pdvs738r4d2g-a.oregon-postgres.render.com:5432/streetart_tour";
     private static final String DB_USER = "root";
     private static final String DB_PASSWORD = "7qNoSJjf1FgqPQ6goxJEFWsMqCQ4adRL";
+
 
     @GetMapping("/utenti")
     public List<Utenti> getTuttiGliUtenti() {
@@ -40,6 +42,7 @@ public class UserController {
         }
         return utenti;
     }
+
 
     @PostMapping("/crea_utenti")
     public ResponseEntity<String> creaUtente(@RequestBody Utenti nuovoUtente) {
@@ -88,50 +91,105 @@ public class UserController {
     }
 
 
-    @PutMapping("/modifica_utenti")
-    public String modificaNomeUtente(@RequestBody ModificaNomeRequest richiesta) {
+    @PutMapping("/modifica_nomecognome_utenti")
+    public String modificaNomeCognomeUtente(@RequestBody ModificaUtenteRequest richiesta) {
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
-            String sql = "UPDATE users SET nome = ?, cognome = ?, username = ?, email = ?, password_hash = ?, bio = ? WHERE username = ?";
+            String sql = "UPDATE users SET nome = ?, cognome = ? WHERE username = ?";
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, richiesta.getNuovoNome());
             ps.setString(2, richiesta.getNuovoCognome());
-            ps.setString(3, richiesta.getNuovoUsername());
-            ps.setString(4, richiesta.getNuovaEmail());
-            ps.setString(5, richiesta.getNuovaPasswordHash());
-            ps.setString(6, richiesta.getNuovaBio());
-            ps.setString(7, richiesta.getVecchioUsername());
+            ps.setString(3, richiesta.getVecchioUsername());
 
             int updated = ps.executeUpdate();
             if (updated > 0) {
-                return "Utente aggiornato con successo.";
+                return "Name/surname changed.";
             } else {
-                return "Utente non trovato.";
+                return "User not found.";
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            return "Errore nella modifica.";
+            return "Error.";
         }
     }
 
-    @DeleteMapping("/elimina_utenti")
-    public String eliminaUtenti(@RequestBody Utenti utenteDaEliminare) {
+
+    @PutMapping("/modifica_username_utenti")
+    public String modificaUsernameUtente(@RequestBody ModificaUtenteRequest richiesta) {
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
-            String sql = "DELETE FROM users WHERE nome = ? AND cognome = ?";
+            
+            // 1. Verifica se il nuovo username è già esistente
+            String checkSql = "SELECT COUNT(*) FROM users WHERE username = ?";
+            try (PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
+                checkStmt.setString(1, richiesta.getNuovoUsername());
+                try (ResultSet rs = checkStmt.executeQuery()) {
+                    if (rs.next() && rs.getInt(1) > 0) {
+                        return "Username already exist.";
+                    }
+                }
+            }
+
+            // 2. Esegui l'aggiornamento se l'username è disponibile
+            String updateSql = "UPDATE users SET username = ? WHERE username = ?";
+            try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
+                ps.setString(1, richiesta.getNuovoUsername());
+                ps.setString(2, richiesta.getVecchioUsername());
+
+                int updated = ps.executeUpdate();
+                if (updated > 0) {
+                    return "Username changed.";
+                } else {
+                    return "User not found.";
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Error.";
+        }
+    }   
+
+
+    @PutMapping("/modifica_password_utenti")
+    public String modificaPasswordUtente(@RequestBody ModificaUtenteRequest richiesta) {
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+            String sql = "UPDATE users SET password_hash = ? WHERE username = ?";
             PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, utenteDaEliminare.getNome());
-            ps.setString(2, utenteDaEliminare.getCognome());
+            ps.setString(1, richiesta.getNuovaPasswordHash());
+            ps.setString(2, richiesta.getVecchioUsername());
+
+            int updated = ps.executeUpdate();
+            if (updated > 0) {
+                return "Pasword changed!";
+            } else {
+                return "User not found!.";
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Error!";
+        }
+    }
+
+
+    @DeleteMapping("/elimina_utenti")
+    public String eliminaUtenti(@RequestBody ModificaUtenteRequest utenteDaEliminare) {
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+            String sql = "DELETE FROM users WHERE username = ? AND password_hash = ?";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, utenteDaEliminare.getVecchioUsername());
+            ps.setString(2, utenteDaEliminare.getVecchiaPasswordHash());
             int deleted = ps.executeUpdate();
 
             if (deleted > 0) {
-                return "Utente eliminato con successo per " + utenteDaEliminare.getNome();
+                return "User deleted";
             } else {
-                return "Utente non trovato.";
+                return "User not found.";
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            return "Errore nell'eliminazione.";
+            return "Error.";
         }
     }
+
 
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody LoginRequest request) {
@@ -161,5 +219,6 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Errore durante il login");
         }
     }
+
 
 }
