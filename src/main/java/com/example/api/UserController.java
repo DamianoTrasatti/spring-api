@@ -7,7 +7,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 public class UserController {
@@ -220,5 +222,34 @@ public class UserController {
         }
     }
 
+    @CrossOrigin
+    @PostMapping("/bio_utenti")
+    public Map<String, String> getBioUtente(@RequestBody Map<String, String> richiesta) {
+        String username = richiesta.get("username");
+        Map<String, String> response = new HashMap<>();
+
+        if (username == null || username.trim().isEmpty()) {
+            response.put("error", "Username not allowed.");
+            return response;
+        }
+
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+            String sql = "SELECT bio FROM users WHERE username = ?";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, username);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                response.put("bio", rs.getString("bio"));
+            } else {
+                response.put("error", "User not found.");
+            }
+        } catch (SQLException e) {
+            response.put("errore", "Error.");
+            e.printStackTrace();
+        }
+
+        return response;
+    }
 
 }
