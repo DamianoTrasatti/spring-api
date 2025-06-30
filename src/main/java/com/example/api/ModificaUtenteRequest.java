@@ -7,7 +7,6 @@ public class ModificaUtenteRequest {
     private String vecchiaPasswordHash;
 
     // Nuovi dati
-    private String nuovoUsername;
     private String nuovoNome;
     private String nuovoCognome;
     private String email;
@@ -21,14 +20,6 @@ public class ModificaUtenteRequest {
 
     public void setVecchioUsername(String vecchioUsername) {
         this.vecchioUsername = vecchioUsername;
-    }
-
-    public String getNuovoUsername() {
-        return nuovoUsername;
-    }
-
-    public void setNuovoUsername(String nuovoUsername) {
-        this.nuovoUsername = nuovoUsername;
     }
 
     public String getNuovoNome() {
