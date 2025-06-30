@@ -112,43 +112,7 @@ public class UserController {
             e.printStackTrace();
             return "Error.";
         }
-    }
-
-
-    @PutMapping("/modifica_username_utenti")
-    public String modificaUsernameUtente(@RequestBody ModificaUtenteRequest richiesta) {
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
-            
-            // 1. Verifica se il nuovo username è già esistente
-            String checkSql = "SELECT COUNT(*) FROM users WHERE username = ?";
-            try (PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
-                checkStmt.setString(1, richiesta.getNuovoUsername());
-                try (ResultSet rs = checkStmt.executeQuery()) {
-                    if (rs.next() && rs.getInt(1) > 0) {
-                        return "Username already exist.";
-                    }
-                }
-            }
-
-            // 2. Esegui l'aggiornamento se l'username è disponibile
-            String updateSql = "UPDATE users SET username = ? WHERE username = ?";
-            try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
-                ps.setString(1, richiesta.getNuovoUsername());
-                ps.setString(2, richiesta.getVecchioUsername());
-
-                int updated = ps.executeUpdate();
-                if (updated > 0) {
-                    return "Username changed.";
-                } else {
-                    return "User not found.";
-                }
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return "Error.";
-        }
-    }   
+    }  
 
 
     @PutMapping("/modifica_password_utenti")
