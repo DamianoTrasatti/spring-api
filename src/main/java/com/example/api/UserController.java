@@ -118,10 +118,11 @@ public class UserController {
     @PutMapping("/modifica_password_utenti")
     public String modificaPasswordUtente(@RequestBody ModificaUtenteRequest richiesta) {
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
-            String sql = "UPDATE users SET password_hash = ? WHERE username = ?";
+            String sql = "UPDATE users SET password_hash = ? WHERE username = ? AND email = ?";
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, richiesta.getNuovaPasswordHash());
             ps.setString(2, richiesta.getVecchioUsername());
+            ps.setString(3, richiesta.getEmail());
 
             int updated = ps.executeUpdate();
             if (updated > 0) {
