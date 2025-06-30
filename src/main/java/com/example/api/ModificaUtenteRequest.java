@@ -10,7 +10,7 @@ public class ModificaUtenteRequest {
     private String nuovoUsername;
     private String nuovoNome;
     private String nuovoCognome;
-    private String nuovaEmail;
+    private String email;
     private String nuovaPasswordHash;
     private String nuovaBio;
 
@@ -47,12 +47,12 @@ public class ModificaUtenteRequest {
         this.nuovoCognome = nuovoCognome;
     }
 
-    public String getNuovaEmail() {
-        return nuovaEmail;
+    public String getEmail() {
+        return email;
     }
 
-    public void setNuovaEmail(String nuovaEmail) {
-        this.nuovaEmail = nuovaEmail;
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getNuovaPasswordHash() {
