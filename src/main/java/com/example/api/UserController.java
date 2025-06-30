@@ -223,7 +223,7 @@ public class UserController {
     }
 
     @CrossOrigin
-    @PostMapping("/bio_utenti")
+    @PostMapping("/info_utenti")
     public Map<String, String> getBioUtente(@RequestBody Map<String, String> richiesta) {
         String username = richiesta.get("username");
         Map<String, String> response = new HashMap<>();
@@ -234,12 +234,14 @@ public class UserController {
         }
 
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
-            String sql = "SELECT bio FROM users WHERE username = ?";
+            String sql = "SELECT nome, cognome, bio FROM users WHERE username = ?";
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, username);
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
+                response.put("nome", rs.getString("nome"));
+                response.put("cognome", rs.getString("cognome"));
                 response.put("bio", rs.getString("bio"));
             } else {
                 response.put("error", "User not found.");
